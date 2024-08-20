@@ -5,19 +5,47 @@ import { useEffect, useRef, useState } from 'react';
 import styled from 'styled-components';
 import RichTextEditor from './TextEditor';
 import { Quill } from 'react-quill';
-import useGetUserInfo from '@/app/hooks/getUserInfo';
 import NestedReply from './NestedReply';
+import { getUser } from '@/utils/commonUtils';
 
 
-const Reply = ({ commentData }) => {
-    const { user } = useGetUserInfo()
-
+const Reply = (replyData: { commentData }) => {
+    const user = getUser()
+    const [commentData, setCommentData] = useState(replyData.commentData)
     const [liked, setLike] = useState(commentData?.likes?.includes(user?.email))
+    const [likeCount, setLikeCount] = useState(commentData?.likes?.length)
     const [isClickedReply, setIsClickedReply] = useState(false)
     const [text, setText] = useState('')
+    const [replies, setReplies] = useState([])
+
+    const handleAppendReply = (reply: any) => {
+        setCommentData({ ...commentData, replies: { ...commentData?.replies, [reply.id]: reply } })
+        setIsClickedReply(false)
+        // setReplyText('')
+
+    }
+
+    const handleAppendLike = (action: string) => {
+        const count = action === 'like' ? +1 : -1
+        setLikeCount(likeCount + count)
+    }
+
+    const handleRepliesSort = () => {
+
+        const repliesArray: any = Object.keys(commentData.replies).map(item => ({ ...commentData?.replies[item], replyId: commentData?.replyId, nestedReplyId: item, }))
+
+
+        repliesArray.sort((a, b) => b.timestamp.seconds - a.timestamp.seconds)
+        setReplies(repliesArray)
+    }
+
+    useEffect(() => {
+        handleRepliesSort()
+    }, [commentData])
+
 
     const handleLike = async () => {
-        await fetch('/api/likereply', {
+        const res = await fetch('/api/likereply', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -28,6 +56,13 @@ const Reply = ({ commentData }) => {
 
             }),
         });
+        const parseRes = await res.json()
+
+        if (parseRes?.success) {
+            handleAppendLike(parseRes?.action)
+        } else {
+            setLike(!liked)
+        }
     }
 
 
@@ -41,7 +76,7 @@ const Reply = ({ commentData }) => {
             body: JSON.stringify({
                 commentId: commentData?.commentId,
                 replyId: commentData?.replyId,
-                userId: commentData.userId,
+                userId: user.email,
                 userImageUrl: user?.picture,
                 username: user?.name,
                 replyText: htmlContent,
@@ -49,8 +84,8 @@ const Reply = ({ commentData }) => {
         });
         const data = await response.json()
 
-        if (data.message === "Reply added successfully") {
-            setReplyText('')
+        if (data.success) {
+            handleAppendReply(data?.data)
         }
     }
 
@@ -80,6 +115,8 @@ const Reply = ({ commentData }) => {
         }
     }, [commentData.commentText]);
 
+
+
     return (
         <div className='mt-6'>
             <StyledCommentWrapper>
@@ -93,7 +130,7 @@ const Reply = ({ commentData }) => {
                         handleLike()
                     }} className='cursor-pointer flex gap-1'>
                         {liked ? <Image src="/like.svg" alt="like icon" width={20} height={20} /> : <Image src="/unlike.svg" alt="unlike Icon" width={20} height={20} />}
-                        {commentData?.likes?.length || 0}
+                        {likeCount}
                     </div>
                     | <StyledReplyBtn onClick={() => setIsClickedReply(!isClickedReply)} > <span className={` ${isClickedReply ? 'text-black' : 'text-gray-400'} select-none`}>Reply</span> </StyledReplyBtn>
                 </StyledFooter>
@@ -102,14 +139,21 @@ const Reply = ({ commentData }) => {
                     <div className=' w-full h-[1px] bg-gray-400 mb-6'></div>
                     <div className='flex h-full w-full'>
                         <div className=' w-[2px] min-h-fit bg-gray-400 '></div>
-                        <div className='w-[100%] ml-6'> <RichTextEditor handleSend={handleSendReply} text={text} setText={setText} showCancleBtn={true} /></div>
+                        <div className='w-[100%] ml-6'> <RichTextEditor handleSend={handleSendReply} text={text} setText={setText} showCancleBtn={true} closeEditor={() => setIsClickedReply(false)} /></div>
 
                     </div>
 
                 </div>}
             </StyledCommentWrapper>
             {Object.keys(commentData?.replies).length > 0 && <div className='ml-8'>
-                {Object.keys(commentData?.replies).map((item) => <NestedReply key={item} commentData={{ ...commentData?.replies[item], replyId: commentData.replyId, nestedReplyId: item }} />)}
+                {replies.map((item) =>
+                    <>
+
+                        <NestedReply key={item} commentData={item} />
+                        <div className=' w-full h-[1px] bg-gray-400 mb-6'></div>
+
+                    </>
+                )}
             </div>}
         </div>
     )

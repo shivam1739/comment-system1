@@ -33,6 +33,9 @@ export async function POST(req: NextRequest, res: NextResponse) {
 
   } catch (error) {
     // Return error message if token verification fails
-    return NextResponse.json({ error: error.message }, { status: 401 });
+    const response = NextResponse.json({ error: error.message }, { status: 401 });
+    response.cookies.set("token", "");
+
+    return response
   }
 }

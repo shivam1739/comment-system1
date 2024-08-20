@@ -38,8 +38,19 @@ export async function POST(request: NextRequest) {
             [`replies.${subReplyId}`]: subReplyDocRef.path, // Store the path to the sub-reply document
         });
 
-        return NextResponse.json({ message: "Sub-reply added successfully", subReplyId });
-    } catch (error:any) {
+        return NextResponse.json({
+            message: "Sub-reply added successfully", success: true, data: {
+                id: subReplyId,
+                userId: body.userId,
+                userImageUrl: body.userImageUrl,
+                username: body.username,
+                replyText: body.replyText,
+                timestamp: firebase.firestore.Timestamp.now(),
+                likes: [],
+                replies: {},
+            }
+        });
+    } catch (error: any) {
         return NextResponse.json({ error: error.message });
     }
 }

@@ -1,6 +1,6 @@
 import { db } from "@/config/firebase";
 import { CommentData, ReplyData } from "@/utils/types";
-import { addDoc, collection, doc, getDoc, getDocs, getDocs as getDocsFromCollection, setDoc, updateDoc, writeBatch } from "firebase/firestore";
+import { collection, doc, getDocs, writeBatch } from "firebase/firestore";
 import { NextRequest, NextResponse } from "next/server";
 import firebase from "firebase/compat/app";
 import "firebase/compat/firestore";
@@ -30,7 +30,18 @@ export async function POST(request: NextRequest) {
         // Commit the batch operation to Firestore
         await batch.commit();
 
-        return NextResponse.json({ message: "Comment and replies added successfully", commentId: commentRef.id });
+        return NextResponse.json({
+            message: "Comment and replies added successfully", data: {
+                id: commentRef.id,
+                userId: body.userId,
+                userImageUrl: body.userImageUrl,
+                username: body.username,
+                commentText: body.commentText,
+                timestamp: firebase.firestore.Timestamp.now(), // Use Firebase Timestamp
+                likes: [],
+                replies: {}
+            }
+        });
     } catch (error: any) {
         return NextResponse.json({ error: error.message });
     }

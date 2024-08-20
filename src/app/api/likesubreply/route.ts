@@ -28,7 +28,7 @@ export async function POST(req: NextRequest) {
             });
         }
 
-        return NextResponse.json({ message: `Sub-reply ${action}d successfully` });
+        return NextResponse.json({ message: `Sub-reply ${action}d successfully`, success: true, action: action });
     } catch (error: any) {
         return NextResponse.json({ error: error.message });
     }

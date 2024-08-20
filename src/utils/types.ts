@@ -53,7 +53,22 @@ export interface RichTextEditorProps {
     handleSend: (value: string) => void;
     text: string
     setText: (value: string) => void;
-    closeEditor?: (value?: string) => void;
-    showCancleBtn?: boolean
+    closeEditor?: () => void;
+    showCancleBtn?: boolean,
+    loading?: boolean
+}
+export interface CommentType {
+    id: string;
+    userId: string;
+    userImageUrl: string;
+    username: string;
+    commentText: string;
+    timestamp: any; // You can import and use `firebase.firestore.Timestamp` if needed
+    likes: string[];
+    replies: Record<string, any>; // Adjust this type according to your needs for replies
+}
 
+export interface ApiResponse {
+    message: string;
+    data: CommentType;
 }

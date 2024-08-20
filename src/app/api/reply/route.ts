@@ -9,15 +9,15 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { commentId } = body;
 
-    // Prepare reply data
+
     const replyData: ReplyData = {
         userId: body.userId,
         userImageUrl: body.userImageUrl,
         username: body.username,
         replyText: body.replyText,
-        timestamp: firebase.firestore.Timestamp.now(), // Use Firebase Timestamp
+        timestamp: firebase.firestore.Timestamp.now(),
         likes: body.likes || [],
-        replies: {}, // Initialize subreplies object
+        replies: {},
     };
 
     try {
@@ -38,7 +38,18 @@ export async function POST(request: NextRequest) {
             [`replies.${replyId}`]: replyDocRef.path,
         });
 
-        return NextResponse.json({ message: "Reply added successfully", replyId });
+        return NextResponse.json({
+            message: "Reply added successfully", data: {
+                id: replyId,
+                userId: body.userId,
+                userImageUrl: body.userImageUrl,
+                username: body.username,
+                replyText: body.replyText,
+                timestamp: firebase.firestore.Timestamp.now(),
+                likes: [],
+                replies: {},
+            }
+        });
     } catch (error: any) {
         return NextResponse.json({ error: error.message });
     }

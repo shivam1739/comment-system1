@@ -20,11 +20,11 @@ export default function RootLayout({
     <html lang="en">
       <body className={inter.className}>
 
-        <div className="fixed top-0 left-0 w-full z-50">
+        <div className="fixed shadow-md top-0 left-0 w-full z-[11111] ">
           <Header />
         </div>
 
-        <div className="pt-[4rem]">
+        <div className="pt-[5rem]">
           {children}
         </div>
       </body>

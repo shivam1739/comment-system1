@@ -1,22 +1,26 @@
-
 'use client'
 import Image from 'next/image';
 import { useEffect, useRef, useState } from 'react';
 import styled from 'styled-components';
-import RichTextEditor from './TextEditor';
 import { Quill } from 'react-quill';
-import useGetUserInfo from '@/app/hooks/getUserInfo';
+import { getUser } from '@/utils/commonUtils';
 
 
 const NestedReply = ({ commentData }) => {
-    const { user } = useGetUserInfo()
+    const user = getUser()
 
     const [liked, setLike] = useState(commentData?.likes?.includes(user?.email))
-    const [isClickedReply, setIsClickedReply] = useState(false)
-    const [text, setText] = useState('')
+    const [likeCount, setLikeCount] = useState(commentData?.likes?.length)
+
+    const handleAppendLike = (action: string) => {
+        const count = action === 'like' ? +1 : -1
+        setLikeCount(likeCount + count)
+    }
+
 
     const handleLike = async () => {
-        await fetch('/api/likesubreply', {
+
+        const res = await fetch('/api/likesubreply', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -28,10 +32,14 @@ const NestedReply = ({ commentData }) => {
 
             }),
         });
-    }
 
-    const handleSendReply = () => {
+        const parseRes = await res.json()
 
+        if (parseRes?.success) {
+            handleAppendLike(parseRes?.action)
+        } else {
+            setLike(!liked)
+        }
     }
 
 
@@ -72,9 +80,8 @@ const NestedReply = ({ commentData }) => {
                         handleLike()
                     }} className='cursor-pointer flex gap-1'>
                         {liked ? <Image src="/like.svg" alt="like icon" width={20} height={20} /> : <Image src="/unlike.svg" alt="unlike Icon" width={20} height={20} />}
-                        {commentData?.likes?.length || 0}
+                        {likeCount || 0}
                     </div>
-                    <StyledReplyBtn onClick={() => setIsClickedReply(!isClickedReply)} ></StyledReplyBtn>
                 </StyledFooter>
 
 

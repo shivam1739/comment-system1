@@ -46,6 +46,7 @@ const Header = () => {
             sessionStorage.setItem('user', JSON.stringify(data.data.user))
 
         }
+
     }
 
     useEffect(() => {
@@ -119,7 +120,7 @@ const Header = () => {
 
 
     return (
-        <StyledHeader >
+        <StyledHeader className='bg-white'>
             {!user ? <div onClick={() => handleSignIn()} className='flex items-center gap-x-4'>
                 <Image src="/google.svg" alt="Google Icon" width={37} height={37} />
                 Sign with the Google

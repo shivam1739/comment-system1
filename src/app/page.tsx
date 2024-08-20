@@ -5,11 +5,13 @@ import { useEffect, useState } from "react";
 import useGetUserInfo from "./hooks/getUserInfo";
 import { Quill } from "react-quill";
 import { getUser } from "@/utils/commonUtils";
+import { ApiResponse, CommentType } from "@/utils/types";
 
 
 export default function Home() {
 
-  const [comments, setComments] = useState([])
+  const [comments, setComments] = useState<CommentType[]>([])
+  const [loading, setLoading] = useState(false)
   const user = getUser()
   const [text, setText] = useState('');
 
@@ -39,7 +41,7 @@ export default function Home() {
   }, [])
 
   const handleSendComment = async (val: any) => {
-
+    setLoading(true)
     const quill = new Quill(document.createElement('div')); // Create a temporary div
     quill.setContents(val); // Set the Delta content
     const htmlContent = quill.root.innerHTML; // Get the HTML content
@@ -54,25 +56,27 @@ export default function Home() {
         "username": user.name
       }),
     });
-    const data = await response.json()
+    const data: ApiResponse = await response.json()
     if (data.message === "Comment and replies added successfully") {
-      getComments()
+      const currentComment = data.data
+      setComments(prevComments => [currentComment, ...prevComments])
       setText('')
     }
-
-
+    setLoading(false)
   }
 
 
 
   return (
     <div className="shadow-md w-2/4 m-auto px-7" >
-      <RichTextEditor handleSend={handleSendComment} text={text} setText={setText} showCancleBtn={false} />
-
+      <RichTextEditor handleSend={handleSendComment} text={text} setText={setText} showCancleBtn={false} loading={loading} />
 
       <div className="py-4">
         {
-          comments.map((item) => <Comment key={item} commentData={item} />)
+          comments.map((item) => {
+
+            return <Comment key={item.id} commentData={item} />
+          })
         }
 
       </div>
