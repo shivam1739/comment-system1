@@ -1,28 +1,34 @@
-'use client'
+"use client";
 import Comment from "@/component/Comment";
 import RichTextEditor from "@/component/TextEditor";
 import { useEffect, useState } from "react";
-import useGetUserInfo from "./hooks/getUserInfo";
 import { Quill } from "react-quill";
 import { getUser } from "@/utils/commonUtils";
 import { ApiResponse, CommentType } from "@/utils/types";
-
+import useAuth from "./hooks/useAuth";
 
 export default function Home() {
+  const [comments, setComments] = useState<CommentType[]>([]);
+  const [loading, setLoading] = useState(false);
+  const user = getUser();
+  const [text, setText] = useState("");
+  const { handleSignIn } = useAuth();
 
-  const [comments, setComments] = useState<CommentType[]>([])
-  const [loading, setLoading] = useState(false)
-  const user = getUser()
-  const [text, setText] = useState('');
-
+  const checkUserAuthenticate = () => {
+    if (!user) {
+      handleSignIn();
+    } else {
+      return true;
+    }
+  };
 
   const getComments = async () => {
     try {
-      const response = await fetch('/api/comment');
+      const response = await fetch("/api/comment");
 
       // Check if the response is okay (status code 200-299)
       if (!response.ok) {
-        throw new Error('Network response was not ok');
+        throw new Error("Network response was not ok");
       }
 
       // Parse the response as JSON
@@ -31,56 +37,59 @@ export default function Home() {
       // Log and set the comments
       setComments(data);
     } catch (error) {
-      console.error('Failed to fetch comments:', error);
+      console.error("Failed to fetch comments:", error);
     }
-
-  }
+  };
 
   useEffect(() => {
-    getComments()
-  }, [])
+    getComments();
+  }, []);
 
   const handleSendComment = async (val: any) => {
-    setLoading(true)
-    const quill = new Quill(document.createElement('div')); // Create a temporary div
+    setLoading(true);
+    const quill = new Quill(document.createElement("div")); // Create a temporary div
     quill.setContents(val); // Set the Delta content
     const htmlContent = quill.root.innerHTML; // Get the HTML content
 
-    const response = await fetch('/api/comment', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+    const response = await fetch("/api/comment", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        "userId": user.email,
-        "userImageUrl": user.picture,
-        "commentText": htmlContent,
-        "username": user.name
+        userId: user.email,
+        userImageUrl: user.picture,
+        commentText: htmlContent,
+        username: user.name,
       }),
     });
-    const data: ApiResponse = await response.json()
+    const data: ApiResponse = await response.json();
     if (data.message === "Comment and replies added successfully") {
-      const currentComment = data.data
-      setComments(prevComments => [currentComment, ...prevComments])
-      setText('')
+      const currentComment = data.data;
+      setComments((prevComments) => [currentComment, ...prevComments]);
+      setText("");
     }
-    setLoading(false)
-  }
-
-
+    setLoading(false);
+  };
 
   return (
-    <div className="shadow-md w-2/4 m-auto px-7" >
-      <RichTextEditor handleSend={handleSendComment} text={text} setText={setText} showCancleBtn={false} loading={loading} />
+    <div className="shadow-md w-2/4 m-auto px-7">
+      <RichTextEditor
+        handleSend={(val) => {
+          const isUserLogedIn = checkUserAuthenticate();
+          if (isUserLogedIn) {
+            handleSendComment(val);
+          }
+        }}
+        text={text}
+        setText={setText}
+        showCancleBtn={false}
+        loading={loading}
+      />
 
       <div className="py-4">
-        {
-          comments.map((item) => {
-
-            return <Comment key={item.id} commentData={item} />
-          })
-        }
-
+        {comments.map((item) => {
+          return <Comment key={item.id} commentData={item} />;
+        })}
       </div>
-
     </div>
   );
 }

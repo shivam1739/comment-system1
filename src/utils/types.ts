@@ -72,3 +72,7 @@ export interface ApiResponse {
     message: string;
     data: CommentType;
 }
+
+export interface StyledEditorProps {
+    disabled?: boolean;
+}

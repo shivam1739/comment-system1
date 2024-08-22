@@ -1,6 +1,6 @@
 "use client";
-import { RichTextEditorProps } from "@/utils/types";
-import React, { useEffect, useState } from "react";
+import { RichTextEditorProps, StyledEditorProps } from "@/utils/types";
+import React, { useEffect } from "react";
 import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
 
@@ -60,7 +60,6 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
       if (editorRef.current) {
         const quill = editorRef.current.getEditor();
 
-        // Define custom button functionality
         sendButton.innerText = loading ? "Sending..." : "Send";
         sendButton.className = "btn";
         sendButton.onclick = handleSendClick;
@@ -69,11 +68,8 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
         cancelButton.className = "btn2";
         cancelButton.onclick = handleCancelClick;
 
-        // Add buttons to the Quill toolbar
         const toolbar = quill.getModule("toolbar");
-        toolbar.addHandler("myButton", () => {
-          // Handler for your custom button
-        });
+
         toolbar.container.appendChild(sendButton);
         if (showCancleBtn) {
           toolbar.container.appendChild(cancelButton);
@@ -98,7 +94,7 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
   );
 };
 
-const StyledEditer = styled(ReactQuill)(
+const StyledEditer = styled(ReactQuill)<StyledEditorProps>(
   ({ disabled }) => `
 min-height: 12.125rem;
 height: auto;
